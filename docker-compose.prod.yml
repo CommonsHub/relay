@@ -11,22 +11,6 @@ services:
       - ALLOWLIST_PATH=/data/allowlist.json
     networks:
       - coolify
-    labels:
-      - "traefik.enable=true"
-      # HTTP → HTTPS redirect
-      - "traefik.http.routers.http-0-relay.entryPoints=http"
-      - "traefik.http.routers.http-0-relay.rule=Host(`relay.commonshub.brussels`)"
-      - "traefik.http.routers.http-0-relay.middlewares=redirect-to-https"
-      - "traefik.http.routers.http-0-relay.service=http-0-relay"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      # HTTPS
-      - "traefik.http.routers.https-0-relay.entryPoints=https"
-      - "traefik.http.routers.https-0-relay.rule=Host(`relay.commonshub.brussels`)"
-      - "traefik.http.routers.https-0-relay.tls=true"
-      - "traefik.http.routers.https-0-relay.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.https-0-relay.service=https-0-relay"
-      - "traefik.http.services.http-0-relay.loadbalancer.server.port=7777"
-      - "traefik.http.services.https-0-relay.loadbalancer.server.port=7777"
 
   admin:
     build:
@@ -38,20 +22,11 @@ services:
       - relay-data:/data
     environment:
       - RELAY_ADMIN_SECRET=${RELAY_ADMIN_SECRET}
-      - ADMIN_ALLOWED_IPS=${ADMIN_ALLOWED_IPS:-127.0.0.1}
+      - ADMIN_ALLOWED_IPS=${ADMIN_ALLOWED_IPS:-0.0.0.0}
       - ALLOWLIST_PATH=/data/allowlist.json
       - ADMIN_PORT=3000
     networks:
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.https-0-relay-admin.entryPoints=https"
-      - "traefik.http.routers.https-0-relay-admin.rule=Host(`relay.commonshub.brussels`) && (PathPrefix(`/admin`) || Path(`/health`))"
-      - "traefik.http.routers.https-0-relay-admin.tls=true"
-      - "traefik.http.routers.https-0-relay-admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.https-0-relay-admin.service=https-0-relay-admin"
-      - "traefik.http.routers.https-0-relay-admin.priority=100"
-      - "traefik.http.services.https-0-relay-admin.loadbalancer.server.port=3000"
 
 volumes:
   relay-data:

@@ -1,0 +1,36 @@
+# Traefik dynamic config for relay.commonshub.brussels
+# Place in /data/coolify/proxy/dynamic/relay.yaml on the Coolify server
+
+http:
+  routers:
+    relay-admin:
+      entryPoints:
+        - https
+      rule: "Host(`relay.commonshub.brussels`) && (PathPrefix(`/admin`) || Path(`/health`))"
+      service: relay-admin
+      tls:
+        certResolver: letsencrypt
+      priority: 100
+    relay-ws:
+      entryPoints:
+        - https
+      rule: "Host(`relay.commonshub.brussels`)"
+      service: relay-ws
+      tls:
+        certResolver: letsencrypt
+    relay-http:
+      entryPoints:
+        - http
+      rule: "Host(`relay.commonshub.brussels`)"
+      service: relay-ws
+      middlewares:
+        - redirect-to-https
+  services:
+    relay-ws:
+      loadBalancer:
+        servers:
+          - url: http://commonshub-relay:7777
+    relay-admin:
+      loadBalancer:
+        servers:
+          - url: http://commonshub-relay-admin:3000
