@@ -14,17 +14,19 @@ services:
     labels:
       - "traefik.enable=true"
       # HTTP → HTTPS redirect
-      - "traefik.http.routers.relay-http.entryPoints=http"
-      - "traefik.http.routers.relay-http.rule=Host(`relay.commonshub.brussels`)"
-      - "traefik.http.routers.relay-http.middlewares=redirect-to-https"
+      - "traefik.http.routers.http-0-relay.entryPoints=http"
+      - "traefik.http.routers.http-0-relay.rule=Host(`relay.commonshub.brussels`)"
+      - "traefik.http.routers.http-0-relay.middlewares=redirect-to-https"
+      - "traefik.http.routers.http-0-relay.service=http-0-relay"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      # HTTPS with websocket
-      - "traefik.http.routers.relay-https.entryPoints=https"
-      - "traefik.http.routers.relay-https.rule=Host(`relay.commonshub.brussels`) && !PathPrefix(`/admin`)"
-      - "traefik.http.routers.relay-https.tls=true"
-      - "traefik.http.routers.relay-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.relay-https.service=relay-strfry"
-      - "traefik.http.services.relay-strfry.loadbalancer.server.port=7777"
+      # HTTPS
+      - "traefik.http.routers.https-0-relay.entryPoints=https"
+      - "traefik.http.routers.https-0-relay.rule=Host(`relay.commonshub.brussels`)"
+      - "traefik.http.routers.https-0-relay.tls=true"
+      - "traefik.http.routers.https-0-relay.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-0-relay.service=https-0-relay"
+      - "traefik.http.services.http-0-relay.loadbalancer.server.port=7777"
+      - "traefik.http.services.https-0-relay.loadbalancer.server.port=7777"
 
   admin:
     build:
@@ -43,18 +45,13 @@ services:
       - coolify
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.relay-admin-https.entryPoints=https"
-      - "traefik.http.routers.relay-admin-https.rule=Host(`relay.commonshub.brussels`) && PathPrefix(`/admin`)"
-      - "traefik.http.routers.relay-admin-https.tls=true"
-      - "traefik.http.routers.relay-admin-https.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.relay-admin-https.service=relay-admin"
-      - "traefik.http.services.relay-admin.loadbalancer.server.port=3000"
-      # Also handle /health
-      - "traefik.http.routers.relay-health.entryPoints=https"
-      - "traefik.http.routers.relay-health.rule=Host(`relay.commonshub.brussels`) && Path(`/health`)"
-      - "traefik.http.routers.relay-health.tls=true"
-      - "traefik.http.routers.relay-health.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.relay-health.service=relay-admin"
+      - "traefik.http.routers.https-0-relay-admin.entryPoints=https"
+      - "traefik.http.routers.https-0-relay-admin.rule=Host(`relay.commonshub.brussels`) && (PathPrefix(`/admin`) || Path(`/health`))"
+      - "traefik.http.routers.https-0-relay-admin.tls=true"
+      - "traefik.http.routers.https-0-relay-admin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https-0-relay-admin.service=https-0-relay-admin"
+      - "traefik.http.routers.https-0-relay-admin.priority=100"
+      - "traefik.http.services.https-0-relay-admin.loadbalancer.server.port=3000"
 
 volumes:
   relay-data:
