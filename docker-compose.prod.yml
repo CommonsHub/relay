@@ -1,0 +1,64 @@
+services:
+  strfry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: commonshub-relay
+    restart: unless-stopped
+    volumes:
+      - relay-data:/data
+    environment:
+      - ALLOWLIST_PATH=/data/allowlist.json
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      # HTTP → HTTPS redirect
+      - "traefik.http.routers.relay-http.entryPoints=http"
+      - "traefik.http.routers.relay-http.rule=Host(`relay.commonshub.brussels`)"
+      - "traefik.http.routers.relay-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      # HTTPS with websocket
+      - "traefik.http.routers.relay-https.entryPoints=https"
+      - "traefik.http.routers.relay-https.rule=Host(`relay.commonshub.brussels`) && !PathPrefix(`/admin`)"
+      - "traefik.http.routers.relay-https.tls=true"
+      - "traefik.http.routers.relay-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.relay-https.service=relay-strfry"
+      - "traefik.http.services.relay-strfry.loadbalancer.server.port=7777"
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: commonshub-relay-admin
+    restart: unless-stopped
+    volumes:
+      - relay-data:/data
+    environment:
+      - RELAY_ADMIN_SECRET=${RELAY_ADMIN_SECRET}
+      - ADMIN_ALLOWED_IPS=${ADMIN_ALLOWED_IPS:-127.0.0.1}
+      - ALLOWLIST_PATH=/data/allowlist.json
+      - ADMIN_PORT=3000
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.relay-admin-https.entryPoints=https"
+      - "traefik.http.routers.relay-admin-https.rule=Host(`relay.commonshub.brussels`) && PathPrefix(`/admin`)"
+      - "traefik.http.routers.relay-admin-https.tls=true"
+      - "traefik.http.routers.relay-admin-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.relay-admin-https.service=relay-admin"
+      - "traefik.http.services.relay-admin.loadbalancer.server.port=3000"
+      # Also handle /health
+      - "traefik.http.routers.relay-health.entryPoints=https"
+      - "traefik.http.routers.relay-health.rule=Host(`relay.commonshub.brussels`) && Path(`/health`)"
+      - "traefik.http.routers.relay-health.tls=true"
+      - "traefik.http.routers.relay-health.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.relay-health.service=relay-admin"
+
+volumes:
+  relay-data:
+
+networks:
+  coolify:
+    external: true
