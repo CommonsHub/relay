@@ -1,0 +1,32 @@
+services:
+  strfry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: strfry
+    restart: unless-stopped
+    ports:
+      - "7777:7777"
+    volumes:
+      - relay-data:/data
+    environment:
+      - ALLOWLIST_PATH=/data/allowlist.json
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    container_name: relay-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - relay-data:/data
+    environment:
+      - RELAY_ADMIN_SECRET=${RELAY_ADMIN_SECRET}
+      - ADMIN_ALLOWED_IPS=${ADMIN_ALLOWED_IPS:-127.0.0.1}
+      - ALLOWLIST_PATH=/data/allowlist.json
+      - ADMIN_PORT=3000
+
+volumes:
+  relay-data:

@@ -1,0 +1,10 @@
+{
+  "name": "commonshub-relay-admin",
+  "version": "1.0.0",
+  "description": "Admin API for Commons Hub Nostr relay allowlist management",
+  "scripts": {
+    "start": "bun run server.ts",
+    "dev": "bun --watch run server.ts"
+  },
+  "dependencies": {}
+}

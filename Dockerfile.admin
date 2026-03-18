@@ -1,0 +1,9 @@
+FROM oven/bun:1-alpine
+
+WORKDIR /app
+
+COPY admin/package.json admin/server.ts ./
+
+EXPOSE 3000
+
+CMD ["bun", "run", "server.ts"]
